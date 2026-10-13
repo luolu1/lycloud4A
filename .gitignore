@@ -1,0 +1,25 @@
+# ── Python ──────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# ── 数据与机密（绝不入库）──────────────────
+backend/data/
+*.db
+backend/.env
+*.snap
+/backup/
+
+# ── 前端 ────────────────────────────────────
+node_modules/
+frontend/dist/
+.vite/
+
+# ── 编辑器 / 系统 ───────────────────────────
+.idea/
+.vscode/
+.DS_Store
+*.log
