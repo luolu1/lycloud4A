@@ -94,15 +94,24 @@ export default function UsersPage() {
 
   const submitEdit = async () => {
     const values = await form.validateFields()
+    const payload: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(values)) {
+      if (typeof v === 'string') {
+        const trimmed = v.trim()
+        if (trimmed) payload[k] = trimmed
+      } else if (v !== undefined && v !== null) {
+        payload[k] = v
+      }
+    }
     try {
       if (editing) {
-        const { password, username, ...rest } = values
+        const { password, username, ...rest } = payload
         void password
         void username
         await userApi.update(editing.id, rest)
         message.success('用户已更新')
       } else {
-        await userApi.create(values)
+        await userApi.create(payload)
         message.success('用户已创建')
       }
       setEditOpen(false)
@@ -254,16 +263,24 @@ export default function UsersPage() {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input disabled={!!editing} />
+            <Input disabled={!!editing} placeholder="3-64位字母、数字或符号" />
           </Form.Item>
           {!editing && (
-            <Form.Item name="password" label="初始密码" rules={[{ required: true, min: 8, message: '至少 8 位' }]}>
-              <Input.Password />
+            <Form.Item
+              name="password"
+              label="初始密码"
+              rules={[{ required: true, min: 12, message: '至少 12 位（须包含大小写字母、数字和特殊符号）' }]}
+            >
+              <Input.Password placeholder="至少 12 位（含大小写字母、数字和符号）" />
             </Form.Item>
           )}
-          <Form.Item name="display_name" label="显示名"><Input /></Form.Item>
-          <Form.Item name="email" label="邮箱"><Input /></Form.Item>
-          <Form.Item name="phone" label="手机号"><Input /></Form.Item>
+          <Form.Item name="display_name" label="显示名">
+            <Input placeholder="选填，如不填写则默认同用户名" />
+          </Form.Item>
+          <Form.Item name="email" label="邮箱">
+            <Input placeholder="选填，如 user@example.com" />
+          </Form.Item>
+          <Form.Item name="phone" label="手机号"><Input placeholder="选填" /></Form.Item>
           <Form.Item name="status" label="状态" initialValue="active">
             <Select
               options={[
@@ -284,8 +301,12 @@ export default function UsersPage() {
         destroyOnClose
       >
         <Form form={pwdForm} layout="vertical">
-          <Form.Item name="new_password" label="新密码" rules={[{ required: true, min: 8, message: '至少 8 位' }]}>
-            <Input.Password />
+          <Form.Item
+            name="new_password"
+            label="新密码"
+            rules={[{ required: true, min: 12, message: '至少 12 位（须包含大小写字母、数字和特殊符号）' }]}
+          >
+            <Input.Password placeholder="至少 12 位（含大小写字母、数字和符号）" />
           </Form.Item>
         </Form>
       </Modal>

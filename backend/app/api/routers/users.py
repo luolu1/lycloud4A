@@ -84,7 +84,7 @@ def create_user(
 
     user = User(
         username=payload.username,
-        display_name=payload.display_name,
+        display_name=payload.display_name or payload.username,
         email=str(payload.email) if payload.email else None,
         phone=payload.phone,
         employee_no=payload.employee_no,

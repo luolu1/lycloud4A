@@ -1,20 +1,36 @@
 """用户与用户组 Schema。"""
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.schemas.common import ORMModel
 
 
 class UserBase(BaseModel):
-    display_name: str = Field(..., max_length=128)
+    display_name: Optional[str] = Field(default=None, max_length=128)
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     employee_no: Optional[str] = None
     title: Optional[str] = None
     org_id: Optional[int] = None
     remark: Optional[str] = None
+
+    @field_validator("display_name", "phone", "employee_no", "title", "remark", mode="before")
+    @classmethod
+    def _clean_str(cls, v: Any) -> Optional[str]:
+        if isinstance(v, str):
+            trimmed = v.strip()
+            return trimmed if trimmed else None
+        return v
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def _clean_email(cls, v: Any) -> Optional[str]:
+        if isinstance(v, str):
+            trimmed = v.strip()
+            return trimmed if trimmed else None
+        return v
 
 
 class UserCreate(UserBase):

@@ -1,5 +1,6 @@
 """应用配置：pydantic-settings 从环境变量 / .env 读取。"""
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 
 from pydantic import field_validator
@@ -19,6 +20,17 @@ class Settings(BaseSettings):
 
     # 数据库
     DATABASE_URL: str = "sqlite:///./data/4a.db"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def _resolve_database_url(cls, v: str | None) -> str:
+        backend_dir = Path(__file__).resolve().parent.parent.parent
+        if not v:
+            return f"sqlite:///{backend_dir / 'data' / '4a.db'}"
+        if isinstance(v, str) and (v.startswith("sqlite:///./") or v == "sqlite:///data/4a.db"):
+            rel_path = v.replace("sqlite:///./", "").replace("sqlite:///", "")
+            return f"sqlite:///{backend_dir / rel_path}"
+        return v
 
     # JWT / 会话
     SECRET_KEY: str = "dev-insecure-secret-change-me"
