@@ -33,6 +33,36 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// 这些接口本身不依赖访问令牌，401 时不应触发刷新逻辑
+const NO_REFRESH_PATHS = ['/auth/login', '/auth/refresh', '/auth/mfa/verify', '/auth/logout']
+
+interface RetryableConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean
+  _netRetry?: number
+}
+
+// 只对幂等请求做瞬时故障重试，避免重复提交业务操作
+const IDEMPOTENT_METHODS = new Set(['get', 'head', 'options'])
+// 网关/限流类状态码，通常属于瞬时故障，可安全重试
+const RETRYABLE_STATUS = new Set([429, 502, 503, 504])
+// 每次重试前的等待时间（毫秒），长度即最大重试次数
+const NETWORK_RETRY_DELAYS = [400, 1200]
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/** 是否为可重试的瞬时故障：无响应（断网、代理重置）或网关类错误码 */
+function isRetryableError(error: AxiosError): boolean {
+  if (error.code === 'ERR_CANCELED') return false
+  if (error.response) return RETRYABLE_STATUS.has(error.response.status)
+  return true
+}
+
+/** 是否为认证类错误（令牌失效/无权限） */
+export function isAuthError(err: unknown): boolean {
+  const status = (err as AxiosError | undefined)?.response?.status
+  return status === 401 || status === 403
+}
+
 let refreshInFlight: Promise<string | null> | null = null
 
 async function doRefresh(): Promise<string | null> {
@@ -51,10 +81,17 @@ async function doRefresh(): Promise<string | null> {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined
+    const original = error.config as RetryableConfig | undefined
     const status = error.response?.status
     const url = original?.url ?? ''
-    if (status === 401 && original && !original._retry && !url.includes('/auth/')) {
+
+    // 1) 访问令牌过期：静默刷新后重放原请求（包括 /auth/me，避免过期即被登出）
+    if (
+      status === 401 &&
+      original &&
+      !original._retry &&
+      !NO_REFRESH_PATHS.some((p) => url.includes(p))
+    ) {
       original._retry = true
       if (!refreshInFlight) {
         refreshInFlight = doRefresh().finally(() => {
@@ -70,7 +107,23 @@ api.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
+      return Promise.reject(error)
     }
+
+    // 2) 幂等请求遇到瞬时故障：自动重试，避免偶发 “Network Error” 打断用户
+    if (
+      original &&
+      isRetryableError(error) &&
+      IDEMPOTENT_METHODS.has((original.method ?? 'get').toLowerCase())
+    ) {
+      const attempt = original._netRetry ?? 0
+      if (attempt < NETWORK_RETRY_DELAYS.length) {
+        original._netRetry = attempt + 1
+        await sleep(NETWORK_RETRY_DELAYS[attempt])
+        return api(original)
+      }
+    }
+
     return Promise.reject(error)
   },
 )
@@ -80,6 +133,16 @@ export function extractError(err: unknown, fallback = '请求失败'): string {
   const detail = axiosErr.response?.data?.detail
   if (typeof detail === 'string') return detail
   if (Array.isArray(detail) && detail.length > 0 && detail[0]?.msg) return detail[0].msg
+  if (axiosErr.code === 'ERR_CANCELED') return '请求已取消'
+  if (!axiosErr.response) {
+    if (axiosErr.code === 'ECONNABORTED' || axiosErr.code === 'ETIMEDOUT') {
+      return '请求超时，请检查网络后重试'
+    }
+    return '网络连接不稳定，请稍后重试'
+  }
+  const status = axiosErr.response.status
+  if (status >= 500) return '服务暂时不可用，请稍后重试'
+  if (status === 429) return '操作过于频繁，请稍后重试'
   return axiosErr.message || fallback
 }
 

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { authApi } from '../api/endpoints'
-import { tokenStore } from '../api/client'
+import { isAuthError, tokenStore } from '../api/client'
 import type { LoginResult, MeOut } from '../types'
 
 interface AuthContextValue {
@@ -28,9 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await authApi.me()
       setUser(me)
-    } catch {
-      tokenStore.clear()
-      setUser(null)
+    } catch (err) {
+      // 仅在认证确实失效时登出；瞬时网络错误保留当前登录态，避免误登出
+      if (isAuthError(err)) {
+        tokenStore.clear()
+        setUser(null)
+      }
     }
   }, [])
 
