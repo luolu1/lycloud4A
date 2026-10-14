@@ -134,3 +134,4 @@ cd frontend && npm run build               # tsc --noEmit && vite build 通过
 - [架构设计](docs/architecture.md) — 系统架构 / 模块职责 / 数据模型 / 认证与授权流程 / 安全设计
 - [部署运维](docs/deployment.md) — Docker Compose / Docker / systemd 三种部署方式、一键更新、环境变量、安全加固、备份恢复、健康检查
 - [API 契约](docs/api-contract.md) — 全部接口定义（权威）
+- [JumpServer 对接方案](docs/jumpserver-integration.md) — 资产纳管 / 单点登录（SSO）/ 账号组织同步 / 审计数据对接，含现有能力与二次开发接口规范
