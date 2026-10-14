@@ -8,7 +8,7 @@ SetCompressor /SOLID lzma
 !define APP_NAME "lycloud4A 连接助手"
 !define APP_EXE  "lycloud4A.exe"
 !define COMPANY  "lycloud"
-!define VERSION  "1.0.0"
+!define VERSION  "1.0.9"
 !define RUN_KEY  "Software\Microsoft\Windows\CurrentVersion\Run"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\lycloud4A"
 
