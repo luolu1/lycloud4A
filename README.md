@@ -43,7 +43,8 @@
 ├── frontend/
 │   ├── src/
 │   │   ├── api/               # axios 封装 + 路由端点（含 401 自动刷新 token）
-│   │   ├── contexts/          # AuthContext（登录态 + 权限判断）
+│   │   ├── contexts/          # AuthContext（登录态 + 权限判断）/ ThemeContext（明暗主题）
+│   │   ├── theme/             # 科技简约主题令牌（antd 双算法 + 图表配色）
 │   │   ├── components/        # ProtectedRoute（路由守卫 + 权限门）
 │   │   ├── layouts/           # 主界布局（侧边菜单按权限渲染）
 │   │   ├── pages/             # 登录 / 仪表盘 / 个人中心 / 账号 / 授权 / 审计 / 密码托管
