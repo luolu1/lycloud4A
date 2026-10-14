@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Avatar, Dropdown, Layout, Menu, Tag } from 'antd'
+import { Avatar, Button, Dropdown, Layout, Menu, Tag, Tooltip } from 'antd'
 import type { MenuProps } from 'antd'
 import {
   AppstoreOutlined,
@@ -9,11 +9,14 @@ import {
   KeyOutlined,
   LinkOutlined,
   LogoutOutlined,
+  MoonOutlined,
   SafetyCertificateOutlined,
+  SunOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons'
 import { useAuth } from '../contexts/AuthContext'
+import { useThemeMode } from '../contexts/ThemeContext'
 
 const { Header, Sider, Content } = Layout
 
@@ -40,6 +43,7 @@ const MENU: MenuEntry[] = [
 
 export default function AppLayout() {
   const { user, can, logout } = useAuth()
+  const { mode, toggle } = useThemeMode()
   const location = useLocation()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
@@ -59,6 +63,11 @@ export default function AppLayout() {
     return matched.length ? matched[matched.length - 1].key : '/dashboard'
   }, [location.pathname])
 
+  const currentLabel = useMemo(
+    () => MENU.find((m) => m.key === selectedKey)?.label ?? '平台概览',
+    [selectedKey],
+  )
+
   const userMenu: MenuProps['items'] = [
     { key: 'profile', icon: <UserOutlined />, label: '个人中心' },
     { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' },
@@ -75,32 +84,45 @@ export default function AppLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} theme="dark">
-        <div style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="brand-logo">{collapsed ? '4A' : 'lycloud4A'}</span>
+      <Sider
+        className="app-sider"
+        width={228}
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        theme="dark"
+      >
+        <div className="app-logo">
+          <span className="app-logo-mark">4A</span>
+          {!collapsed && <span className="app-logo-text">lycloud4A</span>}
         </div>
         <Menu theme="dark" mode="inline" selectedKeys={[selectedKey]} items={items} />
       </Sider>
       <Layout>
-        <Header
-          style={{
-            background: '#fff',
-            padding: '0 24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-          }}
-        >
-          <span style={{ fontSize: 16, fontWeight: 600 }}>lycloud4A 统一身份认证与访问管理</span>
-          <Dropdown menu={{ items: userMenu, onClick: onUserMenuClick }} placement="bottomRight">
-            <span style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Avatar size="small" icon={<UserOutlined />} />
-              <span>{user?.display_name || user?.username}</span>
-              {user?.is_superuser && <Tag color="gold">超管</Tag>}
-              {user?.mfa_enabled && <Tag color="green">MFA</Tag>}
-            </span>
-          </Dropdown>
+        <Header className="app-header">
+          <div className="app-header-title">
+            <span className="app-header-name">{currentLabel}</span>
+            <span className="app-header-sub">统一身份认证与访问管理</span>
+          </div>
+          <div className="app-header-actions">
+            <Tooltip title={mode === 'dark' ? '切换为浅色主题' : '切换为深色主题'}>
+              <Button
+                type="text"
+                className="theme-toggle"
+                aria-label="切换主题"
+                icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+                onClick={toggle}
+              />
+            </Tooltip>
+            <Dropdown menu={{ items: userMenu, onClick: onUserMenuClick }} placement="bottomRight">
+              <span className="user-chip">
+                <Avatar size="small" icon={<UserOutlined />} />
+                <span>{user?.display_name || user?.username}</span>
+                {user?.is_superuser && <Tag color="gold">超管</Tag>}
+                {user?.mfa_enabled && <Tag color="green">MFA</Tag>}
+              </span>
+            </Dropdown>
+          </div>
         </Header>
         <Content className="app-content">
           <Outlet />

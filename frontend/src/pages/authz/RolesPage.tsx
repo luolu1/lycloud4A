@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
+  Alert,
   App,
   Button,
   Form,
@@ -178,7 +179,7 @@ export default function RolesPage() {
 
   return (
     <div>
-      <Title level={4}>角色管理</Title>
+      <Title level={4} className="page-title">角色管理</Title>
       <Space style={{ marginBottom: 16 }} wrap>
         <Button icon={<ReloadOutlined />} onClick={() => void load()}>刷新</Button>
         {can('role:write') && (
@@ -222,9 +223,12 @@ export default function RolesPage() {
         destroyOnClose
       >
         {permRole?.code === 'super-admin' && (
-          <div style={{ marginBottom: 12, padding: '8px 12px', background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 4 }}>
-            超级管理员默认拥有系统全部权限（通配 * ），不可修改权限集合。
-          </div>
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message="超级管理员默认拥有系统全部权限（通配 * ），不可修改权限集合。"
+          />
         )}
         <Tree
           checkable

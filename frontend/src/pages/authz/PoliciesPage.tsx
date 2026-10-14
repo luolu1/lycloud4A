@@ -175,7 +175,7 @@ export default function PoliciesPage() {
 
   return (
     <div>
-      <Title level={4}>访问策略（ABAC）</Title>
+      <Title level={4} className="page-title">访问策略（ABAC）</Title>
       <Space style={{ marginBottom: 16 }} wrap>
         <Input.Search
           allowClear

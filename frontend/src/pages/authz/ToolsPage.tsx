@@ -24,7 +24,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons'
 import { toolApi } from '../../api/endpoints'
-import { detectAgentTool, extractError } from '../../api/client'
+import { detectAgentTool, extractError, fetchAgentHealth } from '../../api/client'
 import { useAuth } from '../../contexts/AuthContext'
 import type { LaunchToolOut } from '../../types'
 
@@ -32,11 +32,26 @@ const { Title, Paragraph, Text } = Typography
 
 const AGENT_URL = 'http://127.0.0.1:47621'
 
+// 连接助手最低版本：低于此版本可能缺少某些协议的会话日志能力（如 MobaXterm 的 sftp/ftp）。
+const AGENT_MIN_VERSION = '1.0.9'
+
+const versionLt = (a: string, b: string): boolean => {
+  const pa = String(a || '').split('.').map((n) => parseInt(n, 10) || 0)
+  const pb = String(b || '').split('.').map((n) => parseInt(n, 10) || 0)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i += 1) {
+    const x = pa[i] || 0
+    const y = pb[i] || 0
+    if (x !== y) return x < y
+  }
+  return false
+}
+
 const KIND_OPTIONS = [
   { value: 'mobaxterm', label: 'MobaXterm', default: 'C:\\Program Files (x86)\\Mobatek\\MobaXterm\\MobaXterm.exe' },
   { value: 'netcatty', label: 'NetCatty', default: 'C:\\Program Files\\NetCatty\\NetCatty.exe' },
   { value: 'xshell', label: 'Xshell', default: 'C:\\Program Files\\NetSarang\\Xshell 7\\Xshell.exe' },
   { value: 'securecrt', label: 'SecureCRT', default: 'C:\\Program Files\\VanDyke Software\\SecureCRT\\SecureCRT.exe' },
+  { value: 'winscp', label: 'WinSCP', default: 'C:\\Program Files (x86)\\WinSCP\\WinSCP.exe' },
   { value: 'chrome', label: 'Chrome', default: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' },
 ]
 
@@ -50,7 +65,20 @@ export default function ToolsPage() {
   const [editOpen, setEditOpen] = useState(false)
   const [editing, setEditing] = useState<LaunchToolOut | null>(null)
   const [detect, setDetect] = useState<Record<number, DetectState>>({})
+  const [agentVersion, setAgentVersion] = useState<string | null>(null)
+  const [agentAvailable, setAgentAvailable] = useState<boolean | null>(null)
   const [form] = Form.useForm()
+
+  const checkAgent = useCallback(async () => {
+    try {
+      const res = await fetchAgentHealth(AGENT_URL)
+      setAgentVersion(res.version)
+      setAgentAvailable(true)
+    } catch {
+      setAgentVersion(null)
+      setAgentAvailable(false)
+    }
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -65,7 +93,8 @@ export default function ToolsPage() {
 
   useEffect(() => {
     void load()
-  }, [load])
+    void checkAgent()
+  }, [load, checkAgent])
 
   const existingKinds = data.map((t) => t.kind)
   const availableKinds = KIND_OPTIONS.filter((k) => !existingKinds.includes(k.value))
@@ -137,7 +166,8 @@ export default function ToolsPage() {
   }
 
   const download = () => {
-    window.open('/api/v1/client/download', '_blank')
+    // 附带版本号，避免浏览器命中旧安装包的缓存
+    window.open(`/api/v1/client/download?v=${AGENT_MIN_VERSION}`, '_blank')
   }
 
   const columns: ColumnsType<LaunchToolOut> = [
@@ -192,7 +222,7 @@ export default function ToolsPage() {
 
   return (
     <div>
-      <Title level={4}>连接工具</Title>
+      <Title level={4} className="page-title">连接工具</Title>
       <Alert
         type="info"
         showIcon
@@ -210,11 +240,30 @@ export default function ToolsPage() {
         <Button type="primary" icon={<DownloadOutlined />} onClick={download}>
           下载连接助手安装包
         </Button>
-        <Button icon={<ReloadOutlined />} onClick={() => void load()}>刷新</Button>
+        <Button icon={<ReloadOutlined />} onClick={() => { void load(); void checkAgent() }}>刷新</Button>
         {can('application:write') && availableKinds.length > 0 && (
           <Button icon={<PlusOutlined />} onClick={openCreate}>新增工具</Button>
         )}
       </Space>
+      {agentAvailable === true && (
+        <div style={{ marginBottom: 12 }}>
+          <Tag color={agentVersion && versionLt(agentVersion, AGENT_MIN_VERSION) ? 'orange' : 'green'}>
+            本地连接助手 v{agentVersion}
+          </Tag>
+          {agentVersion && versionLt(agentVersion, AGENT_MIN_VERSION) && (
+            <Text type="warning">
+              版本过旧（建议 v{AGENT_MIN_VERSION} 及以上）：旧版本可能无法记录 MobaXterm 的
+              sftp/ftp 会话日志，且 sftp 会话会被当成 ssh 终端打开，请点击上方按钮重新下载安装。
+            </Text>
+          )}
+        </div>
+      )}
+      {agentAvailable === false && (
+        <div style={{ marginBottom: 12 }}>
+          <Tag>本地连接助手未运行</Tag>
+          <Text type="secondary">未检测到 127.0.0.1:47621，请先下载并运行 lycloud4A 连接助手。</Text>
+        </div>
+      )}
       <Table
         rowKey="id"
         size="small"

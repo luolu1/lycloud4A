@@ -1,3 +1,83 @@
+/* ============================================================
+   lycloud4A 主题变量 —— 科技简约 · 明暗双主题
+   ============================================================ */
+:root {
+  color-scheme: light;
+
+  --bg-body: #f4f6fb;
+  --bg-body-glow: rgba(31, 58, 147, 0.06);
+  --bg-container: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #f7f9fc;
+
+  --sider-bg: linear-gradient(180deg, #101c3a 0%, #0a1226 100%);
+  --sider-text: rgba(226, 233, 247, 0.7);
+  --sider-border: rgba(255, 255, 255, 0.07);
+
+  --header-bg: rgba(255, 255, 255, 0.78);
+  --header-border: #e6eaf2;
+
+  --border: #e6eaf2;
+  --text: #1f2733;
+  --text-secondary: #5b6675;
+  --text-muted: #8a94a6;
+
+  --brand: #1f3a93;
+  --brand-soft: rgba(31, 58, 147, 0.08);
+  --accent: #22d3ee;
+  --accent-soft: rgba(34, 211, 238, 0.14);
+  --accent-grad: linear-gradient(180deg, #22d3ee 0%, #1f3a93 100%);
+
+  --grid-line: rgba(31, 58, 147, 0.05);
+  --grid-line-strong: rgba(31, 58, 147, 0.09);
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 10px 30px rgba(16, 24, 40, 0.08);
+
+  --scroll-thumb: rgba(31, 58, 147, 0.22);
+  --scroll-thumb-hover: rgba(31, 58, 147, 0.36);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg-body: #0b1020;
+  --bg-body-glow: rgba(91, 140, 255, 0.1);
+  --bg-container: #141a2e;
+  --bg-elevated: #1a2138;
+  --bg-subtle: #18203a;
+
+  --sider-bg: linear-gradient(180deg, #0d1428 0%, #070b16 100%);
+  --sider-text: rgba(226, 233, 247, 0.62);
+  --sider-border: rgba(255, 255, 255, 0.06);
+
+  --header-bg: rgba(16, 22, 40, 0.82);
+  --header-border: #202840;
+
+  --border: #232b45;
+  --text: #e6ebf5;
+  --text-secondary: #98a2b8;
+  --text-muted: #6f7b93;
+
+  --brand: #5b8cff;
+  --brand-soft: rgba(91, 140, 255, 0.14);
+  --accent: #22d3ee;
+  --accent-soft: rgba(34, 211, 238, 0.16);
+  --accent-grad: linear-gradient(180deg, #22d3ee 0%, #5b8cff 100%);
+
+  --grid-line: rgba(120, 160, 255, 0.06);
+  --grid-line-strong: rgba(120, 160, 255, 0.1);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  --scroll-thumb: rgba(120, 160, 255, 0.24);
+  --scroll-thumb-hover: rgba(120, 160, 255, 0.4);
+}
+
+/* ============================================================
+   基础
+   ============================================================ */
 html,
 body,
 #root {
@@ -7,51 +87,307 @@ body,
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
-  background: #f0f2f5;
+  color: var(--text);
+  background-color: var(--bg-body);
+  background-image: radial-gradient(circle at 12% -10%, var(--bg-body-glow), transparent 42%),
+    radial-gradient(circle at 100% 0%, var(--accent-soft), transparent 38%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+  background-attachment: fixed;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+}
+
+/* ============================================================
+   应用外壳
+   ============================================================ */
+.app-sider {
+  background: var(--sider-bg) !important;
+  border-right: 1px solid var(--sider-border);
+}
+
+.app-sider .ant-layout-sider-trigger {
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-top: 1px solid var(--sider-border);
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 62px;
+  padding: 0 18px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.app-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #04121f;
+  background: linear-gradient(135deg, #22d3ee 0%, #5b8cff 100%);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.45);
+}
+
+.app-logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #fff;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--header-bg) !important;
+  backdrop-filter: saturate(180%) blur(10px);
+  border-bottom: 1px solid var(--header-border);
+}
+
+.app-header-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-header-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.app-header-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  color: var(--text-secondary) !important;
+  font-size: 16px;
+}
+.theme-toggle:hover {
+  color: var(--brand) !important;
+  background: var(--brand-soft) !important;
+}
+
+.user-chip {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+.user-chip:hover {
+  background: var(--brand-soft);
+}
+
+.app-content {
+  padding: 22px 24px 32px;
+  overflow: auto;
+}
+
+/* ============================================================
+   页面标题
+   ============================================================ */
+.page-title.ant-typography {
+  position: relative;
+  margin: 0 0 18px;
+  padding-left: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--text);
+}
+
+.page-title.ant-typography::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--accent-grad);
+  box-shadow: 0 0 10px var(--accent-soft);
+}
+
+/* ============================================================
+   卡片 / 统计
+   ============================================================ */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border) !important;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  border-color: var(--accent) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-grad);
+  opacity: 0.55;
+}
+
+.stat-card .ant-statistic-title {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.ant-card {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 表格轻微圆角与留白，保持简约 */
+.ant-table-wrapper .ant-table {
+  background: transparent;
+}
+
+/* ============================================================
+   登录页
+   ============================================================ */
 .login-page {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1f3a93 0%, #2b5876 50%, #4e4376 100%);
+  padding: 24px;
+  background-color: var(--bg-body);
+  background-image: radial-gradient(circle at 20% 15%, var(--bg-body-glow), transparent 45%),
+    radial-gradient(circle at 85% 80%, var(--accent-soft), transparent 45%),
+    linear-gradient(var(--grid-line-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line-strong) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+}
+
+.login-panel {
+  width: 400px;
+  max-width: 92vw;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.login-brand-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.4px;
+}
+
+.login-brand-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.6px;
 }
 
 .login-card {
-  width: 400px;
-  max-width: 92vw;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
-  border-radius: 12px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: saturate(160%) blur(8px);
 }
 
 .login-title {
   text-align: center;
-  margin-bottom: 4px;
+  margin-bottom: 4px !important;
+  font-weight: 600 !important;
 }
 
 .login-subtitle {
+  display: block;
   text-align: center;
-  color: #8c8c8c;
+  color: var(--text-muted) !important;
+  letter-spacing: 2px;
   margin-bottom: 24px;
 }
 
-.brand-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 16px;
-  color: #fff;
+.login-foot {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
 }
 
-.app-content {
-  padding: 20px;
-  overflow: auto;
+/* ============================================================
+   日志查看器
+   ============================================================ */
+.log-viewer {
+  margin: 0;
+  padding: 16px;
+  border-radius: 10px;
+  max-height: 450px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
-.stat-card .ant-statistic-title {
-  color: #8c8c8c;
+:root:not([data-theme='dark']) .log-viewer {
+  background: #0e1526;
+  color: #7ee787;
+  border: 1px solid #1d2b4a;
+}
+
+:root[data-theme='dark'] .log-viewer {
+  background: #070b16;
+  color: #7ee787;
+  border: 1px solid #232b45;
 }

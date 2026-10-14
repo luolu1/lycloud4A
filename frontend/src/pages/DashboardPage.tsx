@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Col, List, Row, Statistic, Table, Tag, Typography } from 'antd'
+import { Card, Col, List, Row, Statistic, Table, Tag, Typography, message } from 'antd'
 import {
   AppstoreOutlined,
   AuditOutlined,
@@ -25,16 +25,18 @@ import {
 } from 'recharts'
 import { dashboardApi } from '../api/endpoints'
 import { extractError } from '../api/client'
+import { useThemeMode } from '../contexts/ThemeContext'
+import { chartPalette, semanticColors } from '../theme'
 import type { DashboardStats } from '../types'
-import { message } from 'antd'
 
 const { Title } = Typography
-
-const COLORS = ['#1f3a93', '#2b5876', '#4e4376', '#38a169', '#dd6b20', '#c53030', '#805ad5']
 
 const resultColor: Record<string, string> = { success: 'green', failure: 'red' }
 
 export default function DashboardPage() {
+  const { mode } = useThemeMode()
+  const palette = chartPalette(mode)
+  const semantic = semanticColors(mode)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -50,9 +52,16 @@ export default function DashboardPage() {
     })()
   }, [])
 
+  const tooltipStyle = {
+    background: palette.tooltipBg,
+    border: `1px solid ${palette.tooltipBorder}`,
+    borderRadius: 8,
+    color: palette.tooltipText,
+  }
+
   return (
     <div>
-      <Title level={4}>平台概览</Title>
+      <Title level={4} className="page-title">平台概览</Title>
       <Row gutter={[16, 16]}>
         <Col xs={12} sm={8} md={6} lg={4}>
           <Card className="stat-card" loading={loading}>
@@ -61,12 +70,12 @@ export default function DashboardPage() {
         </Col>
         <Col xs={12} sm={8} md={6} lg={4}>
           <Card className="stat-card" loading={loading}>
-            <Statistic title="启用用户" value={stats?.user_active ?? 0} valueStyle={{ color: '#38a169' }} />
+            <Statistic title="启用用户" value={stats?.user_active ?? 0} valueStyle={{ color: semantic.success }} />
           </Card>
         </Col>
         <Col xs={12} sm={8} md={6} lg={4}>
           <Card className="stat-card" loading={loading}>
-            <Statistic title="停用用户" value={stats?.user_disabled ?? 0} valueStyle={{ color: '#c53030' }} />
+            <Statistic title="停用用户" value={stats?.user_disabled ?? 0} valueStyle={{ color: semantic.danger }} />
           </Card>
         </Col>
         <Col xs={12} sm={8} md={6} lg={4}>
@@ -89,7 +98,7 @@ export default function DashboardPage() {
             <Statistic
               title="待轮换密钥"
               value={stats?.secret_rotation_due ?? 0}
-              valueStyle={{ color: (stats?.secret_rotation_due ?? 0) > 0 ? '#dd6b20' : undefined }}
+              valueStyle={{ color: (stats?.secret_rotation_due ?? 0) > 0 ? semantic.warning : undefined }}
             />
           </Card>
         </Col>
@@ -103,7 +112,7 @@ export default function DashboardPage() {
             <Statistic
               title="今日失败"
               value={stats?.login_failed_today ?? 0}
-              valueStyle={{ color: (stats?.login_failed_today ?? 0) > 0 ? '#c53030' : undefined }}
+              valueStyle={{ color: (stats?.login_failed_today ?? 0) > 0 ? semantic.danger : undefined }}
             />
           </Card>
         </Col>
@@ -129,11 +138,19 @@ export default function DashboardPage() {
           <Card title="近 7 天登录趋势" loading={loading}>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={stats?.login_trend ?? []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Line type="monotone" dataKey="count" name="登录次数" stroke="#1f3a93" strokeWidth={2} />
+                <CartesianGrid strokeDasharray="3 3" stroke={palette.grid} />
+                <XAxis dataKey="date" stroke={palette.axis} tick={{ fill: palette.axis, fontSize: 12 }} />
+                <YAxis allowDecimals={false} stroke={palette.axis} tick={{ fill: palette.axis, fontSize: 12 }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  name="登录次数"
+                  stroke={palette.line}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </Card>
@@ -152,10 +169,10 @@ export default function DashboardPage() {
                   label
                 >
                   {(stats?.category_distribution ?? []).map((_entry, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={index} fill={palette.series[index % palette.series.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -168,11 +185,11 @@ export default function DashboardPage() {
           <Card title="各维度登录次数" loading={loading}>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={stats?.login_trend ?? []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name="登录次数" fill="#2b5876" />
+                <CartesianGrid strokeDasharray="3 3" stroke={palette.grid} />
+                <XAxis dataKey="date" stroke={palette.axis} tick={{ fill: palette.axis, fontSize: 12 }} />
+                <YAxis allowDecimals={false} stroke={palette.axis} tick={{ fill: palette.axis, fontSize: 12 }} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: palette.grid }} />
+                <Bar dataKey="count" name="登录次数" fill={palette.bar} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>

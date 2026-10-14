@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>lycloud4A 统一身份管控平台</title>
+    <script>
+      // 首屏应用主题，避免暗色模式闪白
+      ;(function () {
+        try {
+          var saved = localStorage.getItem('lycloud4a-theme')
+          var mode = saved === 'light' || saved === 'dark'
+            ? saved
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          document.documentElement.setAttribute('data-theme', mode)
+          document.documentElement.style.colorScheme = mode
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

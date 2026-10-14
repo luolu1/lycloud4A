@@ -136,7 +136,7 @@ export default function OrgsPage() {
 
   return (
     <div>
-      <Title level={4}>组织架构</Title>
+      <Title level={4} className="page-title">组织架构</Title>
       <Space style={{ marginBottom: 16 }} wrap>
         <Button icon={<ReloadOutlined />} onClick={() => void load()}>刷新</Button>
         {can('org:write') && (

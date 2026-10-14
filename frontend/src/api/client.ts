@@ -112,4 +112,12 @@ export async function detectAgentTool(
   return resp.json() as Promise<{ installed: boolean; exe_path: string }>
 }
 
+export async function fetchAgentHealth(
+  agentUrl: string,
+): Promise<{ status: string; agent: string; version: string }> {
+  const resp = await fetch(`${agentUrl.replace(/\/$/, '')}/health`)
+  if (!resp.ok) throw new Error(`连接助手返回 ${resp.status}`)
+  return resp.json() as Promise<{ status: string; agent: string; version: string }>
+}
+
 export default api

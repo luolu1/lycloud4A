@@ -5,7 +5,7 @@ import { LockOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons'
 import { useAuth } from '../contexts/AuthContext'
 import { extractError } from '../api/client'
 
-const { Title, Text } = Typography
+const { Title } = Typography
 
 export default function LoginPage() {
   const { login, verifyMfa, user } = useAuth()
@@ -52,58 +52,71 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
-      <Card className="login-card">
-        <Title level={3} className="login-title">
-          lycloud4A 统一身份管控平台
-        </Title>
-        <Text type="secondary" className="login-subtitle">
-          认证 · 授权 · 账号 · 审计
-        </Text>
-        {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
-        {mfaToken ? (
-          <Form layout="vertical" onFinish={onMfaSubmit} requiredMark={false}>
-            <Form.Item
-              name="code"
-              label="动态验证码（MFA）"
-              rules={[{ required: true, message: '请输入动态验证码' }]}
+      <div className="login-panel">
+        <div className="login-brand">
+          <span className="app-logo-mark">4A</span>
+          <div>
+            <div className="login-brand-name">lycloud4A</div>
+            <div className="login-brand-sub">统一身份认证与访问管理</div>
+          </div>
+        </div>
+        <Card className="login-card">
+          <Title level={3} className="login-title">
+            统一身份管控平台
+          </Title>
+          <span className="login-subtitle">认证 · 授权 · 账号 · 审计</span>
+          {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
+          {mfaToken ? (
+            <Form layout="vertical" onFinish={onMfaSubmit} requiredMark={false}>
+              <Form.Item
+                name="code"
+                label="动态验证码（MFA）"
+                rules={[{ required: true, message: '请输入动态验证码' }]}
+              >
+                <Input
+                  size="large"
+                  prefix={<SafetyOutlined />}
+                  placeholder="6 位验证码"
+                  maxLength={6}
+                  autoFocus
+                />
+              </Form.Item>
+              <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+                验证并登录
+              </Button>
+              <Button type="link" block onClick={() => setMfaToken(null)} style={{ marginTop: 8 }}>
+                返回重新输入账号
+              </Button>
+            </Form>
+          ) : (
+            <Form
+              layout="vertical"
+              onFinish={onPasswordSubmit}
+              requiredMark={false}
+              initialValues={{ username: 'admin' }}
             >
-              <Input
-                size="large"
-                prefix={<SafetyOutlined />}
-                placeholder="6 位验证码"
-                maxLength={6}
-                autoFocus
-              />
-            </Form.Item>
-            <Button type="primary" htmlType="submit" size="large" block loading={loading}>
-              验证并登录
-            </Button>
-            <Button type="link" block onClick={() => setMfaToken(null)} style={{ marginTop: 8 }}>
-              返回重新输入账号
-            </Button>
-          </Form>
-        ) : (
-          <Form layout="vertical" onFinish={onPasswordSubmit} requiredMark={false} initialValues={{ username: 'admin' }}>
-            <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
-              <Input size="large" prefix={<UserOutlined />} placeholder="用户名" autoComplete="username" />
-            </Form.Item>
-            <Form.Item name="password" label="密码" rules={[{ required: true, message: '请输入密码' }]}>
-              <Input.Password
-                size="large"
-                prefix={<LockOutlined />}
-                placeholder="密码"
-                autoComplete="current-password"
-              />
-            </Form.Item>
-            <Button type="primary" htmlType="submit" size="large" block loading={loading}>
-              登 录
-            </Button>
-          </Form>
-        )}
-        <Text type="secondary" style={{ display: 'block', marginTop: 16, fontSize: 12 }}>
-          默认管理员：admin / Admin@12345（首次登录后请立即修改密码）
-        </Text>
-      </Card>
+              <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
+                <Input size="large" prefix={<UserOutlined />} placeholder="用户名" autoComplete="username" />
+              </Form.Item>
+              <Form.Item name="password" label="密码" rules={[{ required: true, message: '请输入密码' }]}>
+                <Input.Password
+                  size="large"
+                  prefix={<LockOutlined />}
+                  placeholder="密码"
+                  autoComplete="current-password"
+                />
+              </Form.Item>
+              <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+                登 录
+              </Button>
+            </Form>
+          )}
+          <Typography.Text type="secondary" style={{ display: 'block', marginTop: 16, fontSize: 12 }}>
+            默认管理员：admin / Admin@12345（首次登录后请立即修改密码）
+          </Typography.Text>
+        </Card>
+        <div className="login-foot">lycloud4A · 4A 统一身份管控</div>
+      </div>
     </div>
   )
 }

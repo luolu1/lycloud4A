@@ -28,6 +28,7 @@ const categoryLabels: Record<string, string> = {
   authz: '授权',
   admin: '管理',
   vault: '密码托管',
+  connection: '连接设备',
 }
 
 const actionLabels: Record<string, string> = {
@@ -158,21 +159,17 @@ export default function AuditPage() {
       dataIndex: 'message',
       render: (v, r) => {
         const hasLog = r.has_log_content || !!r.log_file_path || !!(r.detail && typeof r.detail === 'object' && r.detail['日志文件路径'])
-        const path = r.log_file_path || (r.detail && typeof r.detail === 'object' ? (r.detail['日志文件路径'] as string | undefined) : undefined)
         if (hasLog) {
           return (
-            <Space direction="vertical" size={2}>
-              <Button
-                type="link"
-                size="small"
-                icon={<FileTextOutlined />}
-                style={{ padding: 0 }}
-                onClick={() => void viewLog(r)}
-              >
-                查看操作日志
-              </Button>
-              {path && <Typography.Text type="secondary" style={{ fontSize: 12 }}>{path}</Typography.Text>}
-            </Space>
+            <Button
+              type="link"
+              size="small"
+              icon={<FileTextOutlined />}
+              style={{ padding: 0 }}
+              onClick={() => void viewLog(r)}
+            >
+              查看操作日志
+            </Button>
           )
         }
         return v || '-'
@@ -182,7 +179,7 @@ export default function AuditPage() {
 
   return (
     <div>
-      <Title level={4}>审计日志</Title>
+      <Title level={4} className="page-title">审计日志</Title>
       <Space style={{ marginBottom: 16 }} wrap>
         <Select
           allowClear
@@ -246,21 +243,11 @@ export default function AuditPage() {
           <Typography.Text code copyable>{activeLog.path || '-'}</Typography.Text>
         </div>
         {activeLog.error && !activeLog.content && (
-          <div style={{ color: '#ff4d4f', marginBottom: 8 }}>{activeLog.error}</div>
+          <Typography.Text type="danger" style={{ display: 'block', marginBottom: 8 }}>
+            {activeLog.error}
+          </Typography.Text>
         )}
-        <pre
-          style={{
-            background: '#1f1f1f',
-            color: '#52c41a',
-            padding: 16,
-            borderRadius: 6,
-            maxHeight: 450,
-            overflowY: 'auto',
-            fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-          }}
-        >
+        <pre className="log-viewer">
           {activeLog.content || '暂无日志内容'}
         </pre>
       </Modal>

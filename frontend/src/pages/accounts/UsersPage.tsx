@@ -224,7 +224,7 @@ export default function UsersPage() {
 
   return (
     <div>
-      <Title level={4}>用户管理</Title>
+      <Title level={4} className="page-title">用户管理</Title>
       <Space style={{ marginBottom: 16 }} wrap>
         <Input.Search
           allowClear

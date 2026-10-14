@@ -57,7 +57,7 @@ export default function RotationsPage() {
 
   return (
     <div>
-      <Title level={4}>自动轮换</Title>
+      <Title level={4} className="page-title">自动轮换</Title>
       <Card style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
           <Statistic title="到期待轮换" value={due.length} prefix={<KeyOutlined />} />

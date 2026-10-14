@@ -76,7 +76,7 @@ export default function ProfilePage() {
 
   return (
     <div>
-      <Title level={4}>个人中心</Title>
+      <Title level={4} className="page-title">个人中心</Title>
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card title="账户信息">
