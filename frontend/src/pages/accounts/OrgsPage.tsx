@@ -182,7 +182,7 @@ export default function OrgsPage() {
         open={editOpen}
         onOk={submit}
         onCancel={() => setEditOpen(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item name="parent_id" label="上级组织">

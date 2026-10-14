@@ -236,7 +236,7 @@ export default function AuditPage() {
           <Button key="close" onClick={() => setLogModalOpen(false)}>关闭</Button>,
         ]}
         width={750}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ marginBottom: 12 }}>
           <Typography.Text type="secondary">服务器记录路径：</Typography.Text>

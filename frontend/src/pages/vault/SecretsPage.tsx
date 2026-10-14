@@ -282,7 +282,7 @@ export default function SecretsPage() {
         onOk={submit}
         onCancel={() => setEditOpen(false)}
         width={640}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
@@ -344,7 +344,7 @@ export default function SecretsPage() {
             <Button onClick={() => setValueSecret(null)}>关闭</Button>
           </Space>
         }
-        destroyOnClose
+        destroyOnHidden
       >
         <Descriptions column={1} bordered size="small">
           <Descriptions.Item label="路径">{valueSecret?.path}</Descriptions.Item>
@@ -375,7 +375,7 @@ export default function SecretsPage() {
         open={!!editValueSecret}
         onOk={submitValue}
         onCancel={() => setEditValueSecret(null)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={valueForm} layout="vertical">
           <Form.Item name="dataText" label="字段（key=value，每行一个）" rules={[{ required: true, message: '请输入字段' }]}>

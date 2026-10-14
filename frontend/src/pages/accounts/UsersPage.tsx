@@ -259,7 +259,7 @@ export default function UsersPage() {
         open={editOpen}
         onOk={submitEdit}
         onCancel={() => setEditOpen(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item name="username" label="用户名" rules={[{ required: true, message: '请输入用户名' }]}>
@@ -298,7 +298,7 @@ export default function UsersPage() {
         open={!!pwdUser}
         onOk={submitPassword}
         onCancel={() => setPwdUser(null)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={pwdForm} layout="vertical">
           <Form.Item
@@ -316,7 +316,7 @@ export default function UsersPage() {
         open={!!rolesUser}
         onOk={submitRoles}
         onCancel={() => setRolesUser(null)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Select
           mode="multiple"

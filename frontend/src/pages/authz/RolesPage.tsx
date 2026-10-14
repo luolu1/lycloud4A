@@ -200,7 +200,7 @@ export default function RolesPage() {
         open={editOpen}
         onOk={submit}
         onCancel={() => setEditOpen(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="角色名称" rules={[{ required: true, message: '请输入名称' }]}>
@@ -220,7 +220,7 @@ export default function RolesPage() {
         onCancel={() => setPermRole(null)}
         width={680}
         okButtonProps={{ disabled: permRole?.code === 'super-admin' }}
-        destroyOnClose
+        destroyOnHidden
       >
         {permRole?.code === 'super-admin' && (
           <Alert

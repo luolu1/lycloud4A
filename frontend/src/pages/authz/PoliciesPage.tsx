@@ -216,7 +216,7 @@ export default function PoliciesPage() {
         onOk={submit}
         onCancel={() => setEditOpen(false)}
         width={640}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="策略名称" rules={[{ required: true, message: '请输入名称' }]}>
@@ -268,7 +268,7 @@ export default function PoliciesPage() {
         open={evalOpen}
         onCancel={() => setEvalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={evalForm} layout="vertical" initialValues={{ subject_type: 'user', resource_type: 'application' }}>
           <Space.Compact block>

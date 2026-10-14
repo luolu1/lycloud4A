@@ -279,7 +279,7 @@ export default function ToolsPage() {
         open={editOpen}
         onOk={submit}
         onCancel={() => setEditOpen(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item name="kind" label="软件" rules={[{ required: true, message: '请选择软件' }]}>

@@ -155,7 +155,7 @@ export default function ProfilePage() {
         open={mfaOpen}
         footer={null}
         onCancel={() => setMfaOpen(false)}
-        destroyOnClose
+        destroyOnHidden
       >
         <Space direction="vertical" style={{ width: '100%' }} align="center">
           {mfaUrl && <QRCodeSVG value={mfaUrl} size={180} />}
