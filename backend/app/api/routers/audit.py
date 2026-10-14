@@ -1,6 +1,7 @@
 """审计路由：日志查询与统计。"""
 from __future__ import annotations
 
+import os
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
@@ -9,10 +10,12 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_permission
+from app.core.config import settings
 from app.models.audit import AuditLog
 from app.models.user import User
 from app.schemas.audit import AuditOut, AuditStats
 from app.schemas.common import Page
+from app.services.terminal_render import render_terminal
 
 router = APIRouter(prefix="/audits", tags=["审计"])
 
@@ -75,7 +78,6 @@ def get_audit_log_content(
     db: Session = Depends(get_db),
     _: User = Depends(require_permission("audit:read")),
 ) -> dict:
-    import os
     log = db.get(AuditLog, audit_id)
     if not log:
         return {"error": "审计记录不存在", "content": None, "path": None}
@@ -83,8 +85,8 @@ def get_audit_log_content(
     file_path = detail.get("日志文件路径") or detail.get("log_file_path")
     if not file_path:
         return {"error": "该条记录无关联操作日志文件", "content": None, "path": None}
-    
-    safe_base = os.path.abspath("/mnt/4a-platform/backend/data/audit_logs")
+
+    safe_base = os.path.abspath(settings.AUDIT_LOG_DIR)
     abs_path = os.path.abspath(file_path)
     if not abs_path.startswith(safe_base) or not os.path.exists(abs_path):
         return {
@@ -92,14 +94,12 @@ def get_audit_log_content(
             "path": file_path,
             "content": f"[待客户端上传或文件不存在: {file_path}]",
         }
-    
+
     try:
         with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
-            content = f.read(500000)
-        import re
-        ansi_regex = re.compile(r'\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        cleaned_content = ansi_regex.sub('', content)
-        return {"content": cleaned_content, "path": file_path, "error": None}
+            content = f.read(1000000)
+        # 渲染成操作者实际看到的文本：既修正历史遗留的乱码，对新日志也是幂等的。
+        return {"content": render_terminal(content), "path": file_path, "error": None}
     except Exception as e:
         return {"error": str(e), "path": file_path, "content": None}
 

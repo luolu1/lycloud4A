@@ -264,6 +264,16 @@ def _seed(db: Session) -> bool:
                 protocols="http,https,oidc,saml,web", description="Web 应用浏览器",
             ),
         ])
+
+    # WinSCP 单独判断：老库中 mobaxterm 已存在时上面的整块不会执行，
+    # 因此这里做幂等补齐，保证既有部署也能拿到文件传输工具。
+    if db.execute(select(LaunchTool).where(LaunchTool.kind == "winscp")).scalar_one_or_none() is None:
+        db.add(LaunchTool(
+            kind="winscp", name="WinSCP",
+            exe_path=r"C:\Program Files (x86)\WinSCP\WinSCP.exe",
+            protocols="sftp,scp,ftp,ftps",
+            description="SFTP/SCP/FTP 图形化文件传输客户端",
+        ))
     return True
 
 

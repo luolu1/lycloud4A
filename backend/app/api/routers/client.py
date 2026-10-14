@@ -19,4 +19,8 @@ def download_client() -> FileResponse:
     path = _DOWNLOAD_DIR / filename
     if not path.exists():
         raise HTTPException(status_code=404, detail="安装包未就绪")
-    return FileResponse(path, media_type=media_type, filename=filename)
+    # no-store：避免浏览器/代理缓存旧安装包，导致“重新下载”后仍是老版本客户端。
+    return FileResponse(
+        path, media_type=media_type, filename=filename,
+        headers={"Cache-Control": "no-store"},
+    )

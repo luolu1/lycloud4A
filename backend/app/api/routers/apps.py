@@ -1,6 +1,9 @@
 """设备管理路由：网络/安全设备、服务器、堡垒机等纳管对象。"""
 from __future__ import annotations
 
+import logging
+import os
+import threading
 from datetime import datetime
 from typing import Optional
 from uuid import uuid4
@@ -11,6 +14,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, require_permission
+from app.core.config import settings
 from app.models.application import Application
 from app.models.audit import AuditLog
 from app.models.enums import AuditCategory
@@ -30,8 +34,14 @@ from app.schemas.common import Message, Page
 from app.schemas.user import UserOut
 from app.services import audit_service, connect_service, device_service, policy_service
 from app.services.audit_service import client_ip
+from app.services.terminal_render import render_terminal
 
 router = APIRouter(prefix="/apps", tags=["设备管理"])
+
+log = logging.getLogger("app.connect")
+
+# 同一会话的原始流按到达顺序落盘，渲染时读取整份原始流，避免分片导致的乱码。
+_audit_log_lock = threading.Lock()
 
 
 class ConnectRequest(BaseModel):
@@ -187,17 +197,20 @@ def resolve_connect(
     tool = db.get(LaunchTool, entry.tool_id)
     if app is None or tool is None:
         raise HTTPException(status_code=404, detail="设备或连接工具不存在")
-    actor = db.get(User, entry.user_id)
-    audit_service.record(
-        db, category=AuditCategory.ADMIN, action="解析连接凭证",
-        actor_id=entry.user_id,
-        actor_username=actor.username if actor else None,
-        target_type="application", target_id=app.id, target_name=app.name,
-        detail={
-            "设备类型": app.app_type,
-            "连接工具": tool.name,
-            "访问IP": entry.actor_ip,
-        }, request=request,
+    # 连接事件在签发票据（connect_app）时已记录一条审计，此处解析票据不再重复留痕，
+    # 否则一次连接会出现“连接设备 + 解析连接凭证”两条记录。
+    # 顺便把连接助手版本写回该条审计、并打到服务端日志：客户端未升级时，
+    # 对应适配软件（如 MobaXterm 的 ftp/sftp）可能没有会话日志，便于定位。
+    if entry.audit_id:
+        log_entry = db.get(AuditLog, entry.audit_id)
+        if log_entry is not None and isinstance(log_entry.detail, dict):
+            detail = dict(log_entry.detail)
+            detail["客户端版本"] = payload.client_version or "未知"
+            log_entry.detail = detail
+            db.commit()
+    log.info(
+        "连接解析：设备=%s 协议=%s 工具=%s 客户端版本=%s 会话=%s",
+        app.name, app.protocol, tool.kind, payload.client_version or "未知", entry.session_id,
     )
     return ConnectResolveOut(**connect_service.resolve(app, tool, entry))
 
@@ -207,6 +220,9 @@ class LogUploadIn(BaseModel):
     username: str
     session_id: str
     log_content: str
+    # append：log_content 是新增片段，追加到原始流（tee -a / NetCatty raw）。
+    # snapshot：log_content 是整份快照，覆盖原始流（NetCatty txt/html 每次刷新整体重写）。
+    mode: str = "append"
 
 
 @router.post("/connect/upload-log", summary="接收客户端上传的操作审计日志")
@@ -214,24 +230,35 @@ def upload_connect_log(
     payload: LogUploadIn,
     db: Session = Depends(get_db),
 ) -> dict:
-    import os
-    user_dir = os.path.join("/mnt/4a-platform/backend/data/audit_logs", payload.username)
+    # 客户端上传的是**原始终端流**（可能被 2 秒轮询切分成多段）。这里先落到 .raw，
+    # 再把整份原始流渲染成可读的 .log，因此分片也不会造成乱码。
+    # - append：追加片段（tee -a / NetCatty raw 日志只增不改）
+    # - snapshot：整体覆盖（NetCatty txt 日志每次刷新都用完整内容重写文件）
+    user_dir = os.path.join(settings.AUDIT_LOG_DIR, payload.username)
     os.makedirs(user_dir, exist_ok=True)
-    filename = f"{payload.session_id}.log"
-    target_path = os.path.join(user_dir, filename)
+    raw_path = os.path.join(user_dir, f"{payload.session_id}.raw")
+    target_path = os.path.join(user_dir, f"{payload.session_id}.log")
 
-    with open(target_path, "a", encoding="utf-8") as f:
-        import re
-        ansi_regex = re.compile(r'\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        cleaned = ansi_regex.sub('', payload.log_content)
-        f.write(cleaned)
-        if not cleaned.endswith("\n"):
+    file_mode = "w" if payload.mode == "snapshot" else "a"
+    with _audit_log_lock:
+        with open(raw_path, file_mode, encoding="utf-8", errors="replace") as f:
+            f.write(payload.log_content)
+        try:
+            with open(raw_path, "r", encoding="utf-8", errors="replace") as f:
+                raw = f.read()
+        except OSError:
+            raw = payload.log_content
+        rendered = render_terminal(raw)
+        with open(target_path, "w", encoding="utf-8") as f:
+            f.write(rendered)
             f.write("\n")
 
     log_entry = db.get(AuditLog, payload.audit_id)
     if log_entry and isinstance(log_entry.detail, dict):
-        log_entry.detail["日志文件路径"] = target_path
-        log_entry.detail["会话标识"] = payload.session_id
+        detail = dict(log_entry.detail)
+        detail["日志文件路径"] = target_path
+        detail["会话标识"] = payload.session_id
+        log_entry.detail = detail
         db.commit()
 
     return {"status": "ok", "path": target_path}
@@ -257,21 +284,23 @@ def connect_app(
         )
     actor_ip = payload.client_ip or client_ip(request)
     ticket = connect_service.issue_ticket(app.id, tool.id, actor.id, actor_ip)
-    
-    import os
+
     now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     session_id = f"{actor.username}_{app.name}_{now_str}_{ticket[:6]}"
-    user_log_dir = os.path.join("/mnt/4a-platform/backend/data/audit_logs", actor.username)
+    user_log_dir = os.path.join(settings.AUDIT_LOG_DIR, actor.username)
     os.makedirs(user_log_dir, exist_ok=True)
     server_log_path = os.path.join(user_log_dir, f"{session_id}.log")
 
+    proto = (app.protocol or "").strip().lower()
     audit_entry = audit_service.record(
-        db, category=AuditCategory.ADMIN, action="连接设备",
+        db, category=AuditCategory.CONNECTION,
+        action=f"{proto}连接" if proto else "连接设备",
         actor_id=actor.id, actor_username=actor.username,
         target_type="application", target_id=app.id, target_name=app.name,
         detail={
             "设备类型": app.app_type,
             "连接工具": tool.name,
+            "连接协议": app.protocol,
             "访问IP": actor_ip,
             "日志文件路径": server_log_path,
             "会话标识": session_id,

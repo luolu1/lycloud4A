@@ -87,6 +87,7 @@ class AppConnectOut(BaseModel):
 
 class ConnectResolveIn(BaseModel):
     ticket: str
+    client_version: Optional[str] = None
 
 
 class ConnectResolveOut(BaseModel):

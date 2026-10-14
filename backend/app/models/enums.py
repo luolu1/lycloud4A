@@ -69,11 +69,12 @@ class Effect(str, Enum):
 
 
 class AuditCategory(str, Enum):
-    AUTH = "auth"        # 认证事件（登录/登出/MFA）
-    ACCOUNT = "account"  # 账号管理
-    AUTHZ = "authz"      # 授权/策略变更
-    ADMIN = "admin"      # 系统管理
-    VAULT = "vault"      # 密码托管操作
+    AUTH = "auth"             # 认证事件（登录/登出/MFA）
+    ACCOUNT = "account"       # 账号管理
+    AUTHZ = "authz"           # 授权/策略变更
+    ADMIN = "admin"           # 系统管理
+    VAULT = "vault"           # 密码托管操作
+    CONNECTION = "connection"  # 设备连接（发起连接/解析凭证）
 
 
 class AuditResult(str, Enum):

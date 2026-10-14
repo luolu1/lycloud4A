@@ -11,6 +11,7 @@ KIND_PROTOCOLS: dict[str, str] = {
     "netcatty": "ssh,serial",
     "xshell": "ssh,telnet,rlogin,serial",
     "securecrt": "ssh,telnet,rlogin,serial",
+    "winscp": "sftp,scp,ftp,ftps",
     "chrome": "http,https,oidc,saml,web",
 }
 
@@ -19,6 +20,7 @@ KIND_NAMES: dict[str, str] = {
     "netcatty": "NetCatty",
     "xshell": "Xshell",
     "securecrt": "SecureCRT",
+    "winscp": "WinSCP",
     "chrome": "Chrome",
 }
 
