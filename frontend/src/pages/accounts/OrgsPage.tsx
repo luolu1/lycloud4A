@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   App,
   Button,
@@ -43,7 +43,27 @@ export default function OrgsPage() {
   const [loading, setLoading] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editing, setEditing] = useState<OrgOut | null>(null)
+  const [expandedKeys, setExpandedKeys] = useState<number[]>([])
   const [form] = Form.useForm()
+
+  // 默认展开全部有子级的节点，让组织层级一眼可见
+  const parentKeys = useMemo(() => {
+    const keys: number[] = []
+    const walk = (nodes: OrgTreeNode[]) => {
+      nodes.forEach((n) => {
+        if (n.children && n.children.length) {
+          keys.push(n.id)
+          walk(n.children)
+        }
+      })
+    }
+    walk(tree)
+    return keys
+  }, [tree])
+
+  useEffect(() => {
+    setExpandedKeys(parentKeys)
+  }, [parentKeys])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -103,8 +123,8 @@ export default function OrgsPage() {
   }
 
   const columns: ColumnsType<OrgOut> = [
-    { title: 'ID', dataIndex: 'id', width: 70 },
     { title: '名称', dataIndex: 'name' },
+    { title: 'ID', dataIndex: 'id', width: 70 },
     { title: '编码', dataIndex: 'code' },
     { title: '上级组织', dataIndex: 'parent_id', width: 100, render: (v) => {
         if (!v) return '-'
@@ -148,12 +168,13 @@ export default function OrgsPage() {
         size="small"
         loading={loading}
         columns={columns}
-        dataSource={data}
+        dataSource={tree}
         pagination={false}
         expandable={{
-          defaultExpandAllRows: false,
-          rowExpandable: (r) => data.some((o) => o.parent_id === r.id),
+          expandedRowKeys: expandedKeys,
+          onExpandedRowsChange: (keys) => setExpandedKeys(keys.map(Number)),
         }}
+        rowClassName={(r) => (r.parent_id ? 'org-child-row' : 'org-root-row')}
       />
 
       <Modal

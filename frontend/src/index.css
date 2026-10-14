@@ -10,6 +10,10 @@
   --bg-elevated: #ffffff;
   --bg-subtle: #f7f9fc;
 
+  --table-head-bg: #eaeff8;
+  --table-head-text: #46536b;
+  --bg-row-alt: #f5f8fd;
+
   --sider-bg: linear-gradient(180deg, #101c3a 0%, #0a1226 100%);
   --sider-text: rgba(226, 233, 247, 0.7);
   --sider-border: rgba(255, 255, 255, 0.07);
@@ -46,6 +50,10 @@
   --bg-container: #141a2e;
   --bg-elevated: #1a2138;
   --bg-subtle: #18203a;
+
+  --table-head-bg: #1b243c;
+  --table-head-text: #aab4c8;
+  --bg-row-alt: rgba(120, 160, 255, 0.04);
 
   --sider-bg: linear-gradient(180deg, #0d1428 0%, #070b16 100%);
   --sider-text: rgba(226, 233, 247, 0.62);
@@ -285,9 +293,76 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* 表格轻微圆角与留白，保持简约 */
+/* ============================================================
+   表格：卡片化 + 表头区分 + 逐行分隔 + 斑马纹（强化层次感）
+   ============================================================ */
 .ant-table-wrapper .ant-table {
-  background: transparent;
+  background: var(--bg-container);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.ant-table-wrapper .ant-table-container {
+  border-radius: 12px;
+}
+
+/* 表头：底色与强调边框，和数据行明确区分 */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: var(--table-head-bg) !important;
+  color: var(--table-head-text);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--border) !important;
+}
+/* 去掉 antd 默认的表头竖分隔线，保持简约 */
+.ant-table-wrapper .ant-table-thead > tr > th::before {
+  display: none !important;
+}
+
+/* 数据行：逐行分隔线，行与行一眼可辨 */
+.ant-table-wrapper .ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--border) !important;
+}
+.ant-table-wrapper .ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+/* 斑马纹：极淡底色，长列表不再糊成一片 */
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:nth-child(even) > td {
+  background: var(--bg-row-alt);
+}
+
+/* 悬停高亮 */
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td,
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row.ant-table-row-hover > td {
+  background: var(--brand-soft) !important;
+}
+
+/* 树形子行：缩进 + 左侧引导条，父子层次一目了然 */
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-level-1 > td {
+  background: var(--bg-row-alt);
+}
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-level-1 > td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-level-2 > td:first-child {
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-level-3 > td:first-child,
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-row-level-4 > td:first-child {
+  box-shadow: inset 3px 0 0 var(--text-muted);
+}
+
+/* 展开子行（详情/嵌套）与主表行之间留出视觉分隔 */
+.ant-table-wrapper .ant-table-tbody > tr.ant-table-expanded-row > td {
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* 展开图标与行内操作按钮配色统一 */
+.ant-table-wrapper .ant-table-row-expand-icon {
+  border-color: var(--border);
 }
 
 /* ============================================================
