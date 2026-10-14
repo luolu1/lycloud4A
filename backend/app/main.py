@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routers import (
     apps,
@@ -82,3 +85,40 @@ def healthz() -> dict:
 @app.get("/readyz", tags=["系统"], summary="就绪探针")
 def readyz() -> dict:
     return {"status": "ready"}
+
+
+def _mount_frontend(fastapi_app: FastAPI) -> None:
+    """单容器部署：后端直接托管前端 SPA（存在 frontend/dist 时生效）。
+
+    - `/assets/*` 由 StaticFiles 提供静态资源与缓存头；
+    - 其余 GET 路径优先返回真实文件，否则回退 `index.html`，交给前端路由处理；
+    - 该兜底路由最后注册，不会覆盖已注册的 `/api`、`/docs`、`/healthz` 等路由。
+    """
+    if not settings.SERVE_FRONTEND:
+        return
+
+    dist = Path(settings.FRONTEND_DIST_DIR)
+    if not dist.is_dir():
+        return
+
+    dist_root = dist.resolve()
+    assets = dist_root / "assets"
+    if assets.is_dir():
+        fastapi_app.mount("/assets", StaticFiles(directory=assets), name="assets")
+
+    index_file = dist_root / "index.html"
+    if not index_file.is_file():
+        return
+
+    @fastapi_app.get("/{full_path:path}", include_in_schema=False)
+    def spa_fallback(full_path: str) -> FileResponse:
+        if full_path:
+            candidate = (dist_root / full_path).resolve()
+            if candidate.is_file() and str(candidate).startswith(str(dist_root)):
+                return FileResponse(candidate)
+        return FileResponse(index_file)
+
+    logging.getLogger(__name__).info("前端 SPA 已挂载：%s", dist_root)
+
+
+_mount_frontend(app)

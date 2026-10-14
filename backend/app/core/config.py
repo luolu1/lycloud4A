@@ -21,6 +21,21 @@ class Settings(BaseSettings):
     # 数据库
     DATABASE_URL: str = "sqlite:///./data/4a.db"
 
+    # 会话审计日志目录（客户端上传的终端会话归档）
+    AUDIT_LOG_DIR: str = ""
+
+    # 单容器部署：由后端直接托管前端 SPA 构建产物（Docker 镜像内已内置 frontend/dist）
+    SERVE_FRONTEND: bool = True
+    FRONTEND_DIST_DIR: str = ""
+
+    @field_validator("FRONTEND_DIST_DIR", mode="before")
+    @classmethod
+    def _resolve_frontend_dist_dir(cls, v: str | None) -> str:
+        if v:
+            return str(v)
+        repo_root = Path(__file__).resolve().parent.parent.parent.parent
+        return str(repo_root / "frontend" / "dist")
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def _resolve_database_url(cls, v: str | None) -> str:
@@ -31,6 +46,14 @@ class Settings(BaseSettings):
             rel_path = v.replace("sqlite:///./", "").replace("sqlite:///", "")
             return f"sqlite:///{backend_dir / rel_path}"
         return v
+
+    @field_validator("AUDIT_LOG_DIR", mode="before")
+    @classmethod
+    def _resolve_audit_log_dir(cls, v: str | None) -> str:
+        backend_dir = Path(__file__).resolve().parent.parent.parent
+        if not v:
+            return str(backend_dir / "data" / "audit_logs")
+        return str(v)
 
     # JWT / 会话
     SECRET_KEY: str = "dev-insecure-secret-change-me"

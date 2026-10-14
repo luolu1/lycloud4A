@@ -10,6 +10,8 @@ venv/
 backend/data/
 *.db
 backend/.env
+.env
+!.env.example
 *.snap
 /backup/
 

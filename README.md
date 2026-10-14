@@ -20,7 +20,8 @@
 - **后端**：Python 3.11+ / FastAPI 0.115 / SQLAlchemy 2.0 / Pydantic 2 / PyJWT / bcrypt / pyotp / cryptography(Fernet) / APScheduler
 - **前端**：Vite 5 / React 18 / TypeScript 5.6（strict）/ Ant Design 5 / axios / react-router-dom 6 / recharts / qrcode.react
 - **数据库**：默认 SQLite（零运维），生产可切换 PostgreSQL（`psycopg2-binary` 已就绪）
-- **部署**：systemd + Nginx 反向代理（模板位于 `deploy/`），亦可容器化
+- **部署**：三种方式（Docker Compose / Docker / systemd+Nginx），均支持 **一键部署与一键更新**（`deploy.sh`）
+- **界面**：科技简约风格，内置**明暗双主题**可切换（右上角 ☀/🌙，偏好本地持久化）
 
 ## 目录结构
 
@@ -49,14 +50,42 @@
 │   │   └── types/             # 与后端契约对齐的 TS 类型
 │   └── package.json
 ├── deploy/
-│   ├── systemd/4a-backend.service   # 后端 systemd 单元
-│   └── nginx/4a.conf                # Nginx 反代 + 前端静态托管
+│   ├── systemd/4a-backend.service   # 后端 systemd 单元（参考模板，脚本会按参数生成）
+│   └── nginx/4a.conf                # Nginx 反代 + 前端静态托管（参考模板）
 ├── docs/
 │   ├── api-contract.md        # API 契约（权威，勿改）
 │   ├── architecture.md        # 架构设计
-│   └── deployment.md          # 部署运维手册
+│   └── deployment.md          # 部署运维手册（三种部署方式 + 一键更新）
+├── Dockerfile                 # 单镜像：多阶段构建（前端产物 + 后端运行时）
+├── docker-compose.yml         # Docker Compose 部署（单容器，前后端同端口）
+├── .env.example               # 环境变量模板（脚本据此生成 .env）
+├── deploy.sh                  # 一键部署 / 更新脚本（compose | docker | systemd）
 └── Makefile
 ```
+
+## 生产部署（三种方式）
+
+统一使用仓库根目录的一键脚本 `deploy.sh`，细节见 [`docs/deployment.md`](docs/deployment.md)。
+
+```bash
+# 方式一：Docker Compose（推荐，单容器，前端 + 后端同端口）
+./deploy.sh install --mode compose
+
+# 方式二：原生 Docker（docker build + docker run）
+./deploy.sh install --mode docker --port 8000
+
+# 方式三：systemd + Nginx（裸机，需要 root）
+sudo ./deploy.sh install --mode systemd --domain iam.corp.example.com
+
+# 一键更新（自动识别已安装方式：拉代码 → 重建 → 重启，数据保留）
+./deploy.sh update
+
+# 其它：start | stop | restart | status | logs | uninstall
+./deploy.sh help
+```
+
+脚本首次部署会自动生成 `.env` 并写入随机的 `SECRET_KEY` / `VAULT_MASTER_KEY`，
+**请备份 `VAULT_MASTER_KEY`**（丢失后托管密码无法解密）。默认管理员 `admin` / `Admin@12345` 请在生产环境改掉。
 
 ## 快速开始（开发环境）
 
@@ -102,5 +131,5 @@ cd frontend && npm run build               # tsc --noEmit && vite build 通过
 ## 文档导航
 
 - [架构设计](docs/architecture.md) — 系统架构 / 模块职责 / 数据模型 / 认证与授权流程 / 安全设计
-- [部署运维](docs/deployment.md) — 生产部署 / 环境变量 / 安全加固 / 备份恢复 / 健康检查
+- [部署运维](docs/deployment.md) — Docker Compose / Docker / systemd 三种部署方式、一键更新、环境变量、安全加固、备份恢复、健康检查
 - [API 契约](docs/api-contract.md) — 全部接口定义（权威）

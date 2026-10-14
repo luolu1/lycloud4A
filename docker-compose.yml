@@ -1,0 +1,53 @@
+# lycloud4A — Docker Compose 部署（单容器：前端 + 后端同端口）
+#
+#   docker compose up -d --build      首次部署 / 更新
+#   docker compose logs -f            查看日志
+#   docker compose down               停止（保留数据卷）
+#
+# 配置文件：当前目录的 .env（可从 .env.example 复制，或用 ./deploy.sh install 自动生成）
+
+name: lycloud4a
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lycloud4a:latest
+    container_name: lycloud4a
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      SERVE_FRONTEND: "true"
+      FRONTEND_DIST_DIR: /app/frontend/dist
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    volumes:
+      # SQLite 数据库 + 终端会话日志（持久化，勿删）
+      - 4a-data:/app/backend/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ── 可选：切换 PostgreSQL。取消注释后设置 app 的 DATABASE_URL ──
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: lycloud4a-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: 4a
+  #     POSTGRES_USER: 4a
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+  #   volumes:
+  #     - 4a-pgdata:/var/lib/postgresql/data
+
+volumes:
+  4a-data:
+    name: lycloud4a-data
+  # 4a-pgdata:
+  #   name: lycloud4a-pgdata
